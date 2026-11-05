@@ -18,8 +18,8 @@ Bằng chứng = file/commit/test chứng minh việc xong.
 | T1.1 | P1 | Dựng repo, TypeScript, bộ test node:test (D-024) | SETUP | R2 | Acc1-2026-11-05 | DONE | W-001; `npm test` chạy được |
 | T1.2 | P1 | Định nghĩa kiểu: Team, Species, Piece (3 nhóm trạng thái độc lập), GameState (không có Cell riêng, D-026) | S1 §6, §19 | R2 | Acc1-2026-11-05 | DONE | W-002; `src/engine/types.ts`, `species.ts`, `state.ts`; typecheck sạch |
 | T1.3 | P1 | Board Engine: ô A–F × 1–7, vùng 3–1–3, ID ô | S1 §3 | R2 | Acc1-2026-11-05 | DONE | W-003; `src/engine/board.ts`; 9/9 test qua. Prototype S3 vẫn là bản riêng, chưa dùng engine |
-| T1.4 | P1 | Bộ kiểm tra 14 bất biến | S1 §17; TC004–007 | R2 | | TODO | VIỆC KẾ TIẾP. Hướng dẫn chi tiết ở cuối WORKLOG W-003 (đọc S1 L433–452) |
-| T1.5 | P1 | Hàm "góc nhìn người xem" lọc dữ liệu ẩn (D-004) | S1 §6.1; D-004 | R2 | | TODO | Làm song song được với T1.4 (file riêng `view.ts`). Theo D-004: quân úp ẩn với CẢ HAI bên; chỉ quân ngửa lộ loài/Rank |
+| T1.4 | P1 | Bộ kiểm tra 14 bất biến | S1 §17; TC004–007 | R2 | Acc1-2026-11-05 | DONE | W-004; `src/engine/invariants.ts`, `tests/invariants.test.ts`; 21/21 tests PASS; typecheck PASS |
+| T1.5 | P1 | Hàm "góc nhìn người xem" lọc dữ liệu ẩn (D-004) | S1 §6.1; D-004; D-023 | R2 | Acc1-2026-11-05 | DONE | W-005; `src/engine/view.ts`, `tests/view.test.ts`; kiểm tra quân úp, quân ngửa, Lá Bí Mật và dữ liệu lịch sử; 27/27 tests PASS |
 | T2.1 | P2 | Random Engine có seed (PRNG tất định) | S1 §15; TC030 | R2 | | TODO | Prototype dùng Math.random, chưa có seed |
 | T2.2 | P2 | Tạo bộ 15 quân/đội, min 1 Chuột + 1 Voi, hai đội độc lập | D-001; S1 §5.2; TC034 | R2 | | PARTIAL | Prototype v0.4 đã làm logic này (random đều); chưa có seed, chưa có engine; Q-01 mở |
 | T2.3 | P2 | Chọn N (8–10), chia BOARD/QUEUE, đặt vị trí trong sân nhà | D-002, D-003; S1 §5.1, §5.3; TC001–003, 033, 035 | R2 | | PARTIAL | Prototype v0.4 làm được; chưa có kiểm tra §5.3 dạng test |

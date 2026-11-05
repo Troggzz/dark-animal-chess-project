@@ -86,3 +86,21 @@
 - I-14: ngăn tiếp tục ván sau khi kết thúc.
 
 Các nội dung trên tiếp tục được xử lý khi cấu trúc dữ liệu của những phase liên quan được triển khai.
+### W-005 · 2026-11-05 · Acc1-2026-11-05 · T1.5 · Lọc dữ liệu theo góc nhìn người chơi
+- Mục tiêu: Tạo dữ liệu riêng cho từng đội, không để lộ danh tính quân úp và thông tin Lá Bí Mật trái quyền truy cập.
+- Đã làm:
+  1. Tạo `src/engine/view.ts`.
+  2. Triển khai `createPieceView()` để ẩn type và rank của quân FACE_DOWN với cả hai đội, kể cả chủ sở hữu.
+  3. Chỉ trả thông tin Secret Card cho đội sở hữu; không tiết lộ type và rank của quân mang lá.
+  4. Triển khai `createPlayerView()` để tạo dữ liệu riêng cho người xem, không trả nguyên GameState.
+  5. Triển khai `createHistoryView()` ở mức metadata an toàn; không gửi trường detail vì chưa có schema phân loại dữ liệu công khai và bí mật.
+  6. Tạo `tests/view.test.ts` kiểm tra quân úp, quân ngửa, quyền xem Lá Bí Mật, PlayerView và HistoryView.
+  7. Bổ sung kiểm thử riêng cho quân úp trong hàng chờ theo D-004.
+- File tạo/sửa: `src/engine/view.ts`, `tests/view.test.ts`, `package.json`, `package-lock.json`, `tsconfig.json`.
+- Kiểm tra: `npm test` → 27/27 PASS; `npm run typecheck` → PASS.
+- Quyết định: D-004, D-023.
+- Chưa làm / giới hạn đã biết:
+  1. HistoryView chỉ trả metadata; chưa triển khai bộ lọc chi tiết Battle History của P7.
+  2. Chưa triển khai giao tiếp server/client thực tế.
+- Bước kế tiếp: T2.1 – Random Engine có seed. Đọc S1 §15 và TC030 trước khi triển khai.
+- Tránh xung đột: Không tự ý sửa `types.ts`, `board.ts` hoặc spec S1. Nếu cần thay đổi cấu trúc dữ liệu phải ghi nhận riêng.
