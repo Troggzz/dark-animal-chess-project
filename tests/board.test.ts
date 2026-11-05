@@ -1,3 +1,4 @@
+
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -6,13 +7,7 @@ import {
 } from '../src/engine/board.ts';
 import { createEmptyState } from '../src/engine/state.ts';
 import type { Piece } from '../src/engine/types.ts';
-
-function piece(over: Partial<Piece> & Pick<Piece, 'id' | 'team'>): Piece {
-  return {
-    type: 'mouse', rank: 1, visibility: 'FACE_DOWN', lifeStatus: 'ALIVE',
-    locationType: 'BOARD', position: { x: 0, y: 0 }, secretCards: [], activeEffects: [], ...over,
-  };
-}
+import { piece } from './helpers.ts';
 
 // S1 §3: 6 cột × 7 hàng = 42 ô, mỗi ô có ID duy nhất.
 test('bàn có 42 ô với ID duy nhất, góc A1 và F7', () => {

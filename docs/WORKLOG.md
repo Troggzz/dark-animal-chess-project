@@ -60,3 +60,29 @@
 - **Giới hạn:** chưa kiểm tra "hai quân sống cùng một ô" (đó là bất biến, thuộc T1.4); `pieceAt` chỉ trả quân đầu tiên tìm thấy. Chưa có hàm theo vùng cho luật "quân úp ở sân đối phương" (Q-05 còn mở).
 - **Bước kế tiếp:** **T1.4 – bộ kiểm tra bất biến.** Đọc S1 §17 (L433–L452, 14 điều kiện). Tạo `src/engine/invariants.ts` xuất `checkInvariants(state): InvariantViolation[]`, mỗi điều kiện một mã `I-01…I-14` ghi rõ số thứ tự trong §17; test ở `tests/invariants.test.ts`. Nên tách hàm dựng quân giả trong `tests/board.test.ts` ra `tests/helpers.ts` (tên không có đuôi `.test.ts` để `npm test` không chạy nó) rồi dùng chung. Những điều kiện cần Effect Queue/lá/lưu trữ (P5, P6, P8) thì cài sẵn khung và ghi `TODO(P…)`, đừng bịa luật.
 - **Tránh xung đột:** T1.4 (`invariants.ts`) và T1.5 (`view.ts`, lọc dữ liệu ẩn) là hai file khác nhau, có thể giao hai phiên chạy song song. Cả hai chỉ được **đọc** `types.ts`, `board.ts`; nếu cần sửa hai file đó thì phải làm thành phiên riêng và ghi W mới.
+
+## W-004 — Triển khai T1.4: Invariants
+
+**Ngày:** 2026-11-05
+
+**Công việc đã thực hiện:**
+- Tạo `src/engine/invariants.ts`, khai báo 14 mã bất biến I-01 đến I-14.
+- Triển khai kiểm tra I-01, I-02, I-04, I-05, I-06, I-07, I-08, I-09.
+- I-03 được bảo đảm về cấu trúc theo D-026: mỗi quân chỉ có một `locationType`, không có mảng queue/cells riêng.
+- I-10 đến I-14 được khai báo TODO do phụ thuộc các phase chưa triển khai.
+- Tạo `tests/helpers.ts`, tách hàm tạo quân giả dùng chung.
+- Tạo `tests/invariants.test.ts` để kiểm tra các bất biến đã triển khai.
+- Cập nhật `tests/board.test.ts` sử dụng helper dùng chung.
+
+**Kết quả kiểm thử:**
+- `npm test`: 21/21 tests PASS, 0 FAIL.
+- `npm run typecheck`: PASS, không có lỗi TypeScript.
+
+**Phạm vi còn lại:**
+- I-10: kiểm soát dữ liệu bí mật theo quyền truy cập.
+- I-11: chống commit trùng hành động.
+- I-12: chống xử lý event trùng.
+- I-13: kiểm soát thứ tự hoàn tất transaction/Effect Queue.
+- I-14: ngăn tiếp tục ván sau khi kết thúc.
+
+Các nội dung trên tiếp tục được xử lý khi cấu trúc dữ liệu của những phase liên quan được triển khai.
