@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dark Animal Chess – Bản cơ bản</title>
+<style>
+:root{--bg:#f4f1ea;--panel:#fff;--tx:#1d1b18;--mut:#6b665d;--red:#c0392b;--blue:#2457c5;--rz:#f6dcd7;--bz:#d7e1f6;--nz:#e8e4d9;--bd:#cfc8b8;--hl:#2e9e5b;--sel:#e0a800;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--panel:#20222a;--tx:#ece8df;--mut:#9a968c;--red:#e5604f;--blue:#6b95f0;--rz:#3a2528;--bz:#242c44;--nz:#2b2b31;--bd:#3a3c46;--hl:#43c279;--sel:#f0b90b}}
+:root[data-theme="dark"]{--bg:#15161a;--panel:#20222a;--tx:#ece8df;--mut:#9a968c;--red:#e5604f;--blue:#6b95f0;--rz:#3a2528;--bz:#242c44;--nz:#2b2b31;--bd:#3a3c46;--hl:#43c279;--sel:#f0b90b}
+html,body{height:auto;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:520px;margin:0 auto;padding:12px}
+h1{font-size:18px;margin:0 0 8px}
+.bar{display:flex;justify-content:space-between;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin-bottom:8px;flex-wrap:wrap}
+.R{color:var(--red);font-weight:700}.B{color:var(--blue);font-weight:700}
+.wrap{position:relative}
+.board{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;transition:filter .2s}
+.board.cov{filter:blur(14px);pointer-events:none}
+.cell{aspect-ratio:1;border-radius:8px;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;user-select:none}
+.zr{background:var(--rz)}.zb{background:var(--bz)}.zn{background:var(--nz)}
+.cell b{font-size:clamp(22px,8vw,36px);line-height:1}
+.cell i{font-style:normal;font-size:11px;color:var(--mut);position:absolute;right:4px;bottom:2px}
+.tR{border-color:var(--red)}.tB{border-color:var(--blue)}
+.down{border-style:dashed}
+.sel{box-shadow:0 0 0 3px var(--sel)}
+.hl{box-shadow:inset 0 0 0 3px var(--hl)}
+.cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+button{font:inherit;color:var(--tx);background:var(--panel);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;cursor:pointer}
+button.pri{background:var(--hl);color:#fff;border-color:transparent;font-weight:600}
+button.on{box-shadow:0 0 0 3px var(--sel)}
+.q{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.q button{min-width:52px}
+.msg{min-height:22px;color:var(--mut);margin:6px 0}
+.log{font-size:13px;color:var(--mut);background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
+.log div{padding:1px 0}
+details{margin-top:8px;font-size:13px;color:var(--mut)}
+.end{background:var(--panel);border:2px solid var(--sel);border-radius:10px;padding:10px;margin-bottom:8px;text-align:center;font-weight:700}
+</style></head><body><div id="app"></div>
+<script>
+const SP=[["mouse","🐭","Chuột"],["cat","🐱","Mèo"],["dog","🐶","Chó"],["wolf","🐺","Sói"],["leopard","🐆","Báo"],["tiger","🐯","Hổ"],["lion","🦁","Sư Tử"],["bear","🐻","Gấu"],["elephant","🐘","Voi"]];
+const NAME={R:"Đỏ",B:"Xanh"};
+let G;
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const lbl=(x,y)=>"ABCDEF"[x]+y;
+const at=(x,y)=>{const id=G.board[x+","+y];return id===undefined?null:G.pieces[id]};
+const log=s=>{G.log.unshift(s);G.log.length=Math.min(G.log.length,8)};
+const nm=p=>SP[p.rank-1][1]+SP[p.rank-1][2];
+function setDeploy(){const q=G.pieces.filter(p=>p.team===G.turn&&p.alive&&p.loc==="Q");if(!q.length)return;if(G.draw==null)G.draw=q[rnd(q.length)].id;G.mode="deploy";G.sel={t:"d",id:G.draw}}
+function startTurn(){const q=G.pieces.some(p=>p.team===G.turn&&p.alive&&p.loc==="Q");if(G.turns[G.turn]===0&&q)setDeploy();else if(!q)G.mode="move"}
+
+function newGame(){
+  const N=8+rnd(3);                       // 8–10 quân trên bàn, hai đội bằng nhau
+  const mk=()=>{const c=[1,9];while(c.length<15)c.push(1+rnd(9));return c}; // mỗi đội một bộ 15 quân riêng, tối thiểu 1 Chuột + 1 Voi
+  G={board:{},pieces:[],turn:rnd(2)?"R":"B",log:[],sel:null,over:null,cover:false,t:30,msg:"",N,turns:{R:0,B:0},mode:null,draw:null};
+  let id=0;
+  for(const team of ["R","B"]){
+    const rows=team==="R"?[1,2,3]:[5,6,7],free=[];
+    for(const y of rows)for(let x=0;x<6;x++)free.push([x,y]);
+    shuffle(free);
+    shuffle(mk()).forEach((rank,i)=>{
+      const p={id:id++,team,rank,up:i>=N,loc:i<N?"B":"Q",alive:true,x:null,y:null};
+      if(i<N){[p.x,p.y]=free[i];G.board[p.x+","+p.y]=p.id}
+      G.pieces.push(p);
+    });
+  }
+  log("Trận mới: mỗi đội "+N+" quân trên bàn, "+(15-N)+" trong hàng chờ. "+NAME[G.turn]+" đi trước (ngẫu nhiên).");
+  startTurn();render();
+}
+function kill(q){q.alive=false;q.loc="X";if(q.x!==null)delete G.board[q.x+","+q.y];q.x=q.y=null}
+function counts(t){const ps=G.pieces.filter(p=>p.team===t&&p.alive);return{b:ps.filter(p=>p.loc==="B").length,q:ps.filter(p=>p.loc==="Q").length}}
+
+function doMove(p,x,y){
+  const d=at(x,y),ox=p.x,oy=p.y,wasUp=p.up;
+  p.up=true;                               // quân di chuyển luôn lật ngửa
+  if(!d){delete G.board[ox+","+oy];p.x=x;p.y=y;G.board[x+","+y]=p.id;log(NAME[p.team]+": "+nm(p)+" "+lbl(ox,oy)+"→"+lbl(x,y));return endTurn()}
+  const dn=d.up?nm(d):"quân úp";  // D-022: chỉ quân tấn công lộ; quân bị đánh giữ nguyên trạng thái
+  let t=NAME[p.team]+": "+nm(p)+" đánh "+dn+" ở "+lbl(x,y)+" → ";
+  if(p.rank===1&&d.rank===9){kill(d);t+="thắng, giữ nguyên ô"}
+  else if(p.rank===9&&d.rank===1){kill(p);t+="thua"}
+  else if(p.rank>d.rank){kill(d);delete G.board[ox+","+oy];p.x=x;p.y=y;G.board[x+","+y]=p.id;t+="thắng, chiếm ô"}
+  else if(p.rank<d.rank){kill(p);t+="thua"}
+  else{kill(p);kill(d);t+="cùng Rank, cả hai bị loại"}
+  log(t);endTurn();
+}
+function doDeploy(p,x,y){
+  p.loc="B";p.x=x;p.y=y;p.up=true;G.board[x+","+y]=p.id;
+  log(NAME[p.team]+": triển khai "+nm(p)+" vào "+lbl(x,y));endTurn();
+}
+function autoAct(){
+  const me=G.turn,q=G.pieces.filter(p=>p.team===me&&p.alive&&p.loc==="Q"),empty=[],mv=[];
+  for(let y=1;y<=7;y++)for(let x=0;x<6;x++)if(!at(x,y))empty.push([x,y]);
+  const canDep=q.length>0&&empty.length>0,forced=G.turns[me]===0&&canDep;
+  if(!forced)G.pieces.filter(p=>p.team===me&&p.alive&&p.loc==="B").forEach(p=>[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const x=p.x+a,y=p.y+b;if(x<0||x>5||y<1||y>7)return;const d=at(x,y);if(!d||d.team!==me)mv.push([p,x,y])}));
+  log(NAME[me]+" hết giờ, hệ thống tự chọn hành động");
+  if(canDep&&(forced||!mv.length||rnd(2)===0)){const p=G.draw!=null?G.pieces[G.draw]:q[rnd(q.length)],[x,y]=empty[rnd(empty.length)];return doDeploy(p,x,y)}
+  if(mv.length){const [p,x,y]=mv[rnd(mv.length)];return doMove(p,x,y)}
+  endTurn();
+}
+function endTurn(){
+  G.sel=null;G.msg="";G.mode=null;G.draw=null;G.turns[G.turn]++;
+  const r=counts("R").b,b=counts("B").b;
+  if(!r||!b){G.over=!r&&!b?{draw:true}:{win:r?"R":"B"};return render()}
+  G.turn=G.turn==="R"?"B":"R";G.cover=false;G.t=30;startTurn();render();
+}
+function click(x,y){
+  if(G.over||G.cover)return;
+  const p=at(x,y),s=G.sel;G.msg="";
+  if(!G.mode){G.msg="Hãy chọn Di chuyển hoặc Triển khai trước.";return render()}
+  if(G.mode==="deploy"){if(p){G.msg="Ô đã có quân, chọn ô trống.";return render()}return doDeploy(G.pieces[s.id],x,y)}
+  if(p&&p.team===G.turn){G.sel={t:"m",id:p.id};return render()}
+  if(!s){G.msg="Chọn quân của bạn để di chuyển.";return render()}
+  const m=G.pieces[s.id];
+  if(Math.abs(m.x-x)+Math.abs(m.y-y)!==1){G.msg="Chỉ đi 1 ô, 4 hướng (không đi chéo).";return render()}
+  doMove(m,x,y);
+}
+function render(){
+  const me=G.turn,o=!!G.over,s=G.sel,tg=new Set();
+  if(s&&!o){
+    if(s.t==="d"){for(let y=1;y<=7;y++)for(let x=0;x<6;x++)if(!at(x,y))tg.add(x+","+y)}
+    else{const m=G.pieces[s.id];[[1,0],[-1,0],[0,1],[0,-1]].forEach(([a,b])=>{const x=m.x+a,y=m.y+b;if(x<0||x>5||y<1||y>7)return;const q=at(x,y);if(!q||q.team!==me)tg.add(x+","+y)})}
+  }
+  let cells="";
+  for(let y=7;y>=1;y--)for(let x=0;x<6;x++){
+    const p=at(x,y);let c="cell z"+(y<=3?"r":y===4?"n":"b"),h="";
+    if(p){c+=" t"+p.team+(p.up?"":" down");
+      h=(o||p.up)?`<b>${SP[p.rank-1][1]}</b><i>${p.rank}</i>`:"<b>❓</b>"}
+    if(s&&s.t==="m"&&G.pieces[s.id].x===x&&G.pieces[s.id].y===y)c+=" sel";
+    if(tg.has(x+","+y))c+=" hl";
+    cells+=`<div class="${c}" data-x="${x}" data-y="${y}" title="${lbl(x,y)}">${h}</div>`;
+  }
+  const cr=counts("R"),cb=counts("B");
+  const queue=G.pieces.filter(p=>p.team===me&&p.alive&&p.loc==="Q");
+  const end=o?`<div class="end">${G.over.draw?"Hòa – cả hai đội hết quân trên bàn":"Đội <span class='"+G.over.win+"'>"+NAME[G.over.win]+"</span> thắng!"}</div>`:"";
+  document.getElementById("app").innerHTML=`
+  <h1>🐾 Dark Animal Chess <small style="font-weight:400;color:var(--mut)">– bản cơ bản</small></h1>
+  ${end}
+  <div class="bar"><span>Lượt: <span class="${me}">${NAME[me]}</span></span><span>⏱ ${o?"–":G.t+"s"}</span>
+  <span class="R">Đỏ ${cr.b}+${cr.q}</span><span class="B">Xanh ${cb.b}+${cb.q}</span></div>
+  <div class="wrap"><div class="board${G.cover&&!o?" cov":""}">${cells}</div>
+  ${G.cover&&!o?`<div class="cover"><div>Chuyển máy cho đội <span class="${me}">${NAME[me]}</span></div><button class="pri" data-a="go">Sẵn sàng</button></div>`:""}</div>
+  ${o?"":`<div class="msg">${G.msg||(!G.mode?"Chọn hành động của lượt này.":G.mode==="deploy"?"Đã rút 1 quân úp từ hàng chờ. Chọn ô trống để đặt, quân sẽ lật ngửa.":s?"Chọn ô sáng để đi/tấn công.":"Chọn quân của bạn để di chuyển.")}</div>
+  <div>Hàng chờ ${NAME[me]}: ${queue.length} quân (úp)</div>
+  <div class="q">${!G.mode?`<button class="pri" data-a="mv">Di chuyển</button>${queue.length?`<button class="pri" data-a="dp">Triển khai 1 quân</button>`:""}`:(G.turns[me]>0?`<button data-a="back">Đổi hành động</button>`:"")}</div>`}
+  <div class="q"><button data-a="new">Ván mới</button>${o?"":`<button data-a="sur">Đầu hàng</button>`}</div>
+  <div class="log">${G.log.map(l=>"<div>"+l+"</div>").join("")}</div>
+  <details><summary>Luật tóm tắt</summary>
+  Bàn 6×7. Mỗi đội 15 quân: 8–10 quân úp trên bàn (hai đội bằng nhau), còn lại ở hàng chờ. Mỗi lượt 30 giây, 1 hành động. Lượt đầu của mỗi đội bắt buộc triển khai; từ lượt 2 được chọn Di chuyển (đi 1 ô, 4 hướng) hoặc Triển khai (rút đúng 1 quân úp từ hàng chờ đặt vào ô trống, quân lật ngửa; sau đó mới cập nhật hàng chờ và chuyển lượt). Quân đi là lật ngửa. Rank cao thắng; cùng Rank cả hai bị loại; Chuột thắng Voi (giữ nguyên ô). Hết quân trên bàn là thua (hàng chờ không tính); cả hai hết là hòa. Mọi quân úp (kể cả quân của mình và hàng chờ) đều ẩn, chỉ lộ khi đi, đánh nhau hoặc triển khai. Rank: 1 Chuột · 2 Mèo · 3 Chó · 4 Sói · 5 Báo · 6 Hổ · 7 Sư Tử · 8 Gấu · 9 Voi.</details>`;
+}
+document.addEventListener("click",e=>{
+  if(!G)return;
+  const c=e.target.closest("[data-x]"),q=e.target.closest("[data-q]"),a=e.target.closest("[data-a]");
+  if(a){const k=a.dataset.a;
+    if(k==="new")return newGame();
+    if(!G.over){if(k==="mv"){G.mode="move";G.sel=null;return render()}if(k==="dp"){setDeploy();return render()}if(k==="back"){G.mode=null;G.sel=null;return render()}}
+    if(k==="go"){G.cover=false;return render()}
+    if(k==="sur"&&!G.over){log(NAME[G.turn]+" đầu hàng");G.over={win:G.turn==="R"?"B":"R"};return render()}}
+  if(c)click(+c.dataset.x,+c.dataset.y);
+});
+setInterval(()=>{
+  if(!G||G.over||G.cover)return;
+  if(--G.t<=0)return autoAct();
+  render();
+},1000);
+newGame();
+</script></body></html>

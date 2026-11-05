@@ -1,0 +1,17 @@
+{
+  "name": "dark-animal-chess",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Engine và giao diện Dark Animal Chess (spec V2.6.1). Xem README.md và docs/.",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
